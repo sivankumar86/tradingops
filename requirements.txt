@@ -1,0 +1,5 @@
+ta==0.11.0
+yfinance==0.2.56
+pandas==2.2.2
+boto3
+yfinance==0.2.56
