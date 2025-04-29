@@ -1,5 +1,5 @@
 ta==0.11.0
 yfinance==0.2.56
-pandas==2.2.2
-boto3
+pandas==1.4.2
+boto3==1.21.21
 yfinance==0.2.56

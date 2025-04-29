@@ -1,2 +1,4 @@
 import sys
-import chatgptindicator
+from indicators import chatgptindicator as ci
+
+ci.main()

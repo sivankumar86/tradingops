@@ -7,14 +7,13 @@ from ta.volatility import BollingerBands
 from ta.trend import MACD, EMAIndicator, SMAIndicator
 from ta.trend import ADXIndicator
 
-from crypto import xor_encrypt, xor_decrypt
-from samco_ops import samcoAPI
+from .crypto import xor_encrypt, xor_decrypt
+from .samco_ops import samcoAPI
 import boto3
 from awsglue.utils import getResolvedOptions
 
-
-import urllib.request
-import urllib.error
+import requests
+from requests.exceptions import HTTPError, RequestException
 
 
 def getUSmarket(ticker):
@@ -103,7 +102,7 @@ def check_entry_conditions(ticker,df):
         conditions.append({"symbol": ticker, "message": f"Price is above SMA 20 (short-term uptrend)"})
 
     if last_row["close"] < last_row["SMA_100"] and (last_row["close"] + ( 0.01 * last_row["close"]))  > last_row["SMA_100"]:
-        conditions.append({"symbol": ticker, "message": f"Price is below SMA 100 (long-term downtrend) {last_row["SMA_100"]}"})
+        conditions.append({"symbol": ticker, "message": f"Price is below SMA 100 (long-term downtrend) {last_row['SMA_100']}"})
 
     if last_row["MACD"] < last_row["MACD_Signal"] and abs(last_row["MACD"] - last_row["MACD_Signal"]) < 2:
         conditions.append({"symbol": ticker, "message": "MACD bearish crossover detected"})
@@ -175,26 +174,22 @@ def us_monitor_market():
 
 
 def read_github_text(url: str) -> str:
-    """Read text from a GitHub raw URL into a string."""
+    """Read text from a GitHub raw URL into a string using requests."""
     try:
-        # Open the URL and read content
-        with urllib.request.urlopen(url) as response:
-            # Check if response is successful (200)
-            if response.getcode() != 200:
-                raise ValueError(f"Failed to fetch URL: HTTP {response.getcode()}")
-            # Read and decode text (assuming UTF-8)
-            return response.read().decode('utf-8')
-    except urllib.error.HTTPError as e:
-        print(f"HTTP Error: {e.code} - {e.reason}")
+        response = requests.get(url, timeout=10)
+        response.raise_for_status()  # Raises HTTPError for 4xx/5xx
+        return response.text  # Returns UTF-8 decoded text
+    except HTTPError as e:
+        print(f"HTTP Error: {e.response.status_code} - {e}")
         return ""
-    except urllib.error.URLError as e:
-        print(f"URL Error: {e.reason}")
-        return ""
-    except ValueError as e:
-        print(f"Error: {e}")
+    except RequestException as e:
+        print(f"Request Error: {e}")
         return ""
     except UnicodeDecodeError:
         print("Error: Failed to decode content as UTF-8")
+        return ""
+    except Exception as e:
+        print(f"Error: {e}")
         return ""
 def india_monitor_market(password):
     alerts = []
@@ -279,5 +274,5 @@ def main():
         html_body=df.to_html()
     )
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
