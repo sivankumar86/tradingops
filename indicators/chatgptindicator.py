@@ -197,7 +197,7 @@ def india_monitor_market(password):
     # print(f"Encrypted: {encrypted}")
     # Decrypt
     decrypted = xor_decrypt(encrypted, password)
-    print(f"Decrypted: {decrypted}")
+    #print(f"Decrypted: {decrypted}")
     parts = decrypted.split(':')
     userid,password,yob=parts
     requestBody = {
@@ -230,13 +230,14 @@ def india_monitor_market(password):
 
 
 
-def send_ses_email(sender: str, recipient: str, subject: str, html_body: str, region: str = 'us-east-1'):
+def send_ses_email(sender: str, recipients: list, subject: str, html_body: str, region: str = 'ap-southeast-2'):
     """Send an HTML email using AWS SES."""
     try:
+        print("email sending ....")
         ses = boto3.client('ses', region_name=region)
         response = ses.send_email(
             Source=sender,
-            Destination={'ToAddresses': [recipient]},
+            Destination={'ToAddresses': recipients},
             Message={
                 'Subject': {'Data': subject, 'Charset': 'UTF-8'},
                 'Body': {
@@ -260,17 +261,18 @@ def main():
     total=us_output + in_output
 
     df=pd.DataFrame(total)
-    print(df.to_html())
+    #print(df.to_html())
+    print("process completed")
     # Email Configuration
     EMAIL = "sivankumar86@gmail.com"
-    TO_EMAIL = "sivankumar86@gmail.com"
+    TO_EMAIL = ["sivankumar86@gmail.com","13luckhy@gmail.com"]
     # Send email
     send_ses_email(
         sender=EMAIL,
-        recipient=TO_EMAIL,
+        recipients=TO_EMAIL,
         subject='DataFrame Report from AWS Glue',
         html_body=df.to_html()
     )
 
-if __name__ == "__main__":
-    main()
+# if __name__ == "__main__":
+#     main()
