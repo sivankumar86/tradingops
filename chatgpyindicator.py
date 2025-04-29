@@ -1,30 +1,19 @@
 import yfinance as yf
 import pandas as pd
-import numpy as np
-import smtplib
-from email.mime.text import MIMEText
 from ta.momentum import RSIIndicator, StochasticOscillator
 from ta.volatility import BollingerBands
 from ta.trend import MACD, EMAIndicator, SMAIndicator
 from ta.trend import ADXIndicator
 
+from crypto import xor_encrypt, xor_decrypt
 from samco_ops import samcoAPI
 
 # Email Configuration
-EMAIL = "sivankumar@gmail.com"
-PASSWORD = "6535n@vi$"
-TO_EMAIL = "recipient_email@gmail.com"
+EMAIL = "sivankumar86@gmail.com"
+TO_EMAIL = "sivankumar86@gmail.com"
 
-
-def send_email(subject, message):
-    msg = MIMEText(message)
-    msg["Subject"] = subject
-    msg["From"] = EMAIL
-    msg["To"] = TO_EMAIL
-
-    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as server:
-        server.login(EMAIL, PASSWORD)
-        server.sendmail(EMAIL, TO_EMAIL, msg.as_string())
+import urllib.request
+import urllib.error
 
 
 def getUSmarket(ticker):
@@ -184,19 +173,54 @@ def us_monitor_market():
 
 
 
+def read_github_text(url: str) -> str:
+    """Read text from a GitHub raw URL into a string."""
+    try:
+        # Open the URL and read content
+        with urllib.request.urlopen(url) as response:
+            # Check if response is successful (200)
+            if response.getcode() != 200:
+                raise ValueError(f"Failed to fetch URL: HTTP {response.getcode()}")
+            # Read and decode text (assuming UTF-8)
+            return response.read().decode('utf-8')
+    except urllib.error.HTTPError as e:
+        print(f"HTTP Error: {e.code} - {e.reason}")
+        return ""
+    except urllib.error.URLError as e:
+        print(f"URL Error: {e.reason}")
+        return ""
+    except ValueError as e:
+        print(f"Error: {e}")
+        return ""
+    except UnicodeDecodeError:
+        print("Error: Failed to decode content as UTF-8")
+        return ""
 def india_monitor_market():
     alerts = []
+
+
+    # # Encrypt
+    # encrypted = xor_encrypt(data, password)
+    # print(f"Encrypted: {encrypted}")
+    # Decrypt
+    decrypted = xor_decrypt(encrypted, password)
+    print(f"Decrypted: {decrypted}")
+    parts = decrypted.split(':')
+    userid,password,yob=parts
+    requestBody = {
+        "userId": userid,
+        "password": password,
+        "yob": yob
+    }
+    sa = samcoAPI()
+    request_login = sa.login(requestBody=requestBody)
+    session_token = request_login['sessionToken']
     for symbol in ["NIFTY BANK", "NIFTY 50"]:
-        
         from datetime import datetime, timedelta
         # Calculate date 365 days ago
         date_365_days_ago = datetime.today() - timedelta(days=365)
-
         # Convert to string in ISO format
         fromdate = date_365_days_ago.strftime('%Y-%m-%d')
-        sa=samcoAPI()
-        request_login = sa.login(requestBody=requestBody)
-        session_token = request_login['sessionToken']
         inverselist = sa.getIndexHistory(session_token=session_token, symbol=symbol, fromdate=fromdate)
         df = pd.DataFrame(inverselist["indexCandleData"])
         df = df.drop('ltp', axis=1)

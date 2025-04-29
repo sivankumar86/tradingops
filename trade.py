@@ -1,10 +1,6 @@
 from samco_ops import login, getQuote, placeOrder
 
-# requestBody={
-#   "userId": "RR38403",
-#   "password": "Dhruvan@0606",
-#   "yob": "1965"
-# }
+
 
 requestBody={
   "userId": "DR42012",
