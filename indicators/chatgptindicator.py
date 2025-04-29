@@ -20,9 +20,7 @@ def getUSmarket(ticker):
     df = yf.download(ticker, period="200d", interval="1d")
     df.dropna(inplace=True)
     df.reset_index(inplace=True)  # Add date as a column
-
     df["Date"] = df["Date"].astype(str)  # Ensure Date is string for better readability
-
     return df
 def get_stock_data(df):
 
@@ -262,7 +260,7 @@ def main():
     total=us_output + in_output
 
     df=pd.DataFrame(total)
-   # print(df.to_html())
+    print(df.to_html())
     # Email Configuration
     EMAIL = "sivankumar86@gmail.com"
     TO_EMAIL = "sivankumar86@gmail.com"
@@ -274,5 +272,5 @@ def main():
         html_body=df.to_html()
     )
 
-# if __name__ == "__main__":
-#     main()
+if __name__ == "__main__":
+    main()
