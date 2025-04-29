@@ -264,7 +264,7 @@ def main():
     #print(df.to_html())
     print("process completed")
     # Email Configuration
-    EMAIL = "sivankumar86@gmail.com"
+    EMAIL = "13luckhy@gmail.com"
     TO_EMAIL = ["sivankumar86@gmail.com","13luckhy@gmail.com"]
     # Send email
     send_ses_email(
