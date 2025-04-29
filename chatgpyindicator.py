@@ -1,3 +1,5 @@
+import sys
+
 import yfinance as yf
 import pandas as pd
 from ta.momentum import RSIIndicator, StochasticOscillator
@@ -7,10 +9,9 @@ from ta.trend import ADXIndicator
 
 from crypto import xor_encrypt, xor_decrypt
 from samco_ops import samcoAPI
+import boto3
+from awsglue.utils import getResolvedOptions
 
-# Email Configuration
-EMAIL = "sivankumar86@gmail.com"
-TO_EMAIL = "sivankumar86@gmail.com"
 
 import urllib.request
 import urllib.error
@@ -195,10 +196,9 @@ def read_github_text(url: str) -> str:
     except UnicodeDecodeError:
         print("Error: Failed to decode content as UTF-8")
         return ""
-def india_monitor_market():
+def india_monitor_market(password):
     alerts = []
-
-
+    encrypted=read_github_text("https://raw.githubusercontent.com/sivankumar86/tradingops/refs/heads/main/message.txt")
     # # Encrypt
     # encrypted = xor_encrypt(data, password)
     # print(f"Encrypted: {encrypted}")
@@ -237,12 +237,47 @@ def india_monitor_market():
 
 
 
+def send_ses_email(sender: str, recipient: str, subject: str, html_body: str, region: str = 'us-east-1'):
+    """Send an HTML email using AWS SES."""
+    try:
+        ses = boto3.client('ses', region_name=region)
+        response = ses.send_email(
+            Source=sender,
+            Destination={'ToAddresses': [recipient]},
+            Message={
+                'Subject': {'Data': subject, 'Charset': 'UTF-8'},
+                'Body': {
+                    'Html': {'Data': html_body, 'Charset': 'UTF-8'}
+                }
+            }
+        )
+        print(f"Email sent successfully: Message ID {response['MessageId']}")
+    except Exception as e:
+        print(f"Error sending email: {e}")
 
-# Start monitoring
-us_output=us_monitor_market()
-in_output=india_monitor_market()
+def main():
+    params = ['key']
+    args = getResolvedOptions(sys.argv, params)
+    key = args['key']
+    # Start monitoring
+    us_output=us_monitor_market()
 
-total=us_output + in_output
+    in_output=india_monitor_market(key)
 
-df=pd.DataFrame(total)
-print(df.to_html())
+    total=us_output + in_output
+
+    df=pd.DataFrame(total)
+   # print(df.to_html())
+    # Email Configuration
+    EMAIL = "sivankumar86@gmail.com"
+    TO_EMAIL = "sivankumar86@gmail.com"
+    # Send email
+    send_ses_email(
+        sender=EMAIL,
+        recipient=TO_EMAIL,
+        subject='DataFrame Report from AWS Glue',
+        html_body=df.to_html()
+    )
+
+if __name__ == "__main__":
+    main()
